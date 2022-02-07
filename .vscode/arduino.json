@@ -1,0 +1,8 @@
+{
+    "board": "Seeeduino:samd:seeed_XIAO_m0",
+    "programmer": "Seeeduino:adafruit_atmel_ice",
+    "sketch": "src\\Bus2.ino",
+    "port": "COM4",
+    "configuration": "usbstack=arduino,debug=on",
+    "output": "../ArduinoOutput"
+}
