@@ -35,9 +35,9 @@ void setup() {
   lcd.init();
   lcd.fillScreen(BLACK);
   radio.begin();
-  radio.openReadingPipe(0, address);
+  radio.openWritingPipe(address);
   radio.setPALevel(RF24_PA_MIN);
-  radio.startListening();
+  radio.stopListening();
   if (keyPad.begin() == false)
   {
     Serial.println("\nERROR: cannot communicate to keypad.\nPlease reboot.\n");
@@ -79,6 +79,7 @@ int busStore(char* nums, int index, int* bus) {
   int busNum = temp.toInt();
   bus[index] = busNum;
 }
+
 #define isNum 0b00001
 #define curLn 0b00010
 #define manX  0b00100
@@ -123,13 +124,14 @@ void csPrint(String str, int txt, uint8_t opt = 0b00000, int mX = 0, int mY = 0,
 }
 
 void loop() {
+  int INIT_PIN = digitalRead(0);
   lcd.fillScreen(RED);
   delay(1000);
   int bus[3] = {0, 0, 0};
   renum:
   lcd.fillScreen(BLACK);
-  bool init = false;
-  double px{};
+  bool init = (INIT_PIN == HIGH) ? true : false; // If pin 0 is pulled high, skip initialization.
+  Serial.println(init);
   while (!init) { // lcd positions are 15, 54, 93
     char busNum[3] = {NULL,NULL,NULL};
     csPrint("Bus Number\n", 2);
@@ -175,9 +177,12 @@ void loop() {
       break;
     }
   }
-  // Serial.print("bus[0]: "); Serial.println(bus[0]);
-  // Serial.print("bus[1]: "); Serial.println(bus[1]);
-  // Serial.print("bus[2]: "); Serial.println(bus[2]);
+  if (INIT_PIN == HIGH) {
+    Serial.println("Initialization skipped.");
+    bus[0] = 123;
+    bus[1] = 456; // Used while testing without keypad.
+    bus[2] = 789;
+  }
   lcd.fillScreen(GREEN);
   delay(1000);
   lcd.fillScreen(BLACK);
@@ -192,5 +197,7 @@ void loop() {
     }
   }
   csPrint(String("~End List~"),1,0b01000,0,lcd.getCursorY());
+  String allBus = String(bus[0]) + String(bus[1]) + String(bus[2]);
+  radio.write(&allBus, 9);
   delay(3000);
 }
